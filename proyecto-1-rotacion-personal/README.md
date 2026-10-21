@@ -1,5 +1,7 @@
 # Project 1 — Employee Attrition Dashboard (Power BI)
 
+**Live dashboard:** https://alexia-balleza.github.io/data-analyst-portfolio/proyecto-1-rotacion-personal/tablero-rotacion.html
+
 **What it shows:** end-to-end HR analytics — the People Analytics / HR Data Analyst niche.
 
 **Files:**
