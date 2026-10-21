@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Attrition Dashboard — Alexia Balleza</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{ --blue:#0f6cbd; --dark:#1b2a41; --red:#c0392b; --green:#1e8449; --bg:#f4f6f9; --card:#ffffff; }
+  *{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Arial, sans-serif; }
+  body{ background:var(--bg); color:var(--dark); padding:24px; }
+  header{ max-width:1180px; margin:0 auto 20px auto; }
+  header h1{ font-size:26px; font-weight:700; }
+  header p{ color:#5a6b82; margin-top:4px; font-size:14px; }
+  .kpis{ max-width:1180px; margin:0 auto 20px auto; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .kpi{ background:var(--card); border-radius:10px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,.08); text-align:center; }
+  .kpi .value{ font-size:30px; font-weight:700; color:var(--blue); }
+  .kpi .value.red{ color:var(--red); }
+  .kpi .label{ font-size:13px; color:#5a6b82; margin-top:4px; }
+  .grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .card{ background:var(--card); border-radius:10px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .card h2{ font-size:16px; margin-bottom:12px; }
+  .card canvas{ width:100% !important; height:260px !important; }
+  .insights{ max-width:1180px; margin:14px auto 0 auto; background:var(--card); border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .insights h2{ font-size:16px; margin-bottom:10px; }
+  .insights li{ margin-left:18px; margin-bottom:6px; font-size:14px; line-height:1.45; }
+  footer{ max-width:1180px; margin:16px auto 0 auto; text-align:center; color:#8595ab; font-size:12px; }
+  @media (max-width:820px){ .kpis{grid-template-columns:repeat(2,1fr);} .grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Employee Attrition Dashboard</h1>
+  <p>Workforce analytics · 1,470 employees · HR dataset analysis by Alexia Balleza — Data Analyst</p>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><div class="value">1,470</div><div class="label">Total employees</div></div>
+  <div class="kpi"><div class="value red">8.5%</div><div class="label">Overall attrition rate</div></div>
+  <div class="kpi"><div class="value red">125</div><div class="label">Employees who left</div></div>
+  <div class="kpi"><div class="value">2.4×</div><div class="label">Attrition risk with overtime</div></div>
+</section>
+
+<section class="grid">
+  <div class="card"><h2>Attrition rate by overtime</h2><canvas id="overtime"></canvas></div>
+  <div class="card"><h2>Attrition rate by department</h2><canvas id="department"></canvas></div>
+  <div class="card"><h2>Attrition rate by job role</h2><canvas id="role"></canvas></div>
+  <div class="card"><h2>Attrition rate by age group</h2><canvas id="age"></canvas></div>
+  <div class="card"><h2>Attrition rate by years at company</h2><canvas id="tenure"></canvas></div>
+  <div class="card"><h2>Attrition rate by work-life balance (1 = worst, 4 = best)</h2><canvas id="wlb"></canvas></div>
+</section>
+
+<section class="insights">
+  <h2>Key findings</h2>
+  <ul>
+    <li><strong>Overtime is the #1 driver:</strong> employees who work overtime leave at 14.5% vs 6.0% for those who don't — a 2.4× higher rate.</li>
+    <li><strong>Sales Representatives are the highest-risk role</strong> (11.8%), followed by HR Managers (11.3%).</li>
+    <li><strong>Youngest employees leave most:</strong> ages 18–25 show 11.4% attrition, vs 5.0% for ages 46–55.</li>
+    <li><strong>Poor work-life balance triples the risk</strong> at the lowest rating (12.9%).</li>
+    <li><strong>The danger zone is years 2–3</strong> (10.9%); employees with 11+ years are the most loyal (5.5%).</li>
+    <li><strong>Leavers earn less:</strong> $6,225 avg. monthly income vs $6,550 for those who stay.</li>
+  </ul>
+</section>
+
+<footer>Portfolio project — github.com/alexia-balleza/data-analyst-portfolio · Dashboard also built in Power BI (see project guide)</footer>
+
+<script>
+const BLUE='#0f6cbd', RED='#c0392b', GRAY='#8fa3bd', GREEN='#1e8449';
+Chart.defaults.font.family="'Segoe UI', Arial, sans-serif";
+function bar(id, labels, data, colors){
+  new Chart(document.getElementById(id), { type:'bar',
+    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:5 }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=> c.parsed.y + '% attrition' } } },
+      scales:{ y:{ beginAtZero:true, ticks:{ callback:(v)=> v + '%' } }, x:{ grid:{ display:false } } } } });
+}
+bar('overtime', ['No overtime','Overtime'], [6.0,14.5], [BLUE, RED]);
+bar('department', ['Sales','Human Resources','Research & Development'], [9.3,8.6,7.7], [RED, BLUE, GRAY]);
+bar('role', ['Sales Rep.','HR Manager','Research Scientist','Mfg. Director','Lab Technician','Sales Executive','HR Rep.'], [11.8,11.3,8.3,7.5,7.1,7.0,6.2], [RED, RED, BLUE, BLUE, GRAY, GRAY, GRAY]);
+bar('age', ['18–25','26–35','36–45','46–55','56–60'], [11.4,9.8,9.0,5.0,9.8], [RED, BLUE, BLUE, GREEN, BLUE]);
+bar('tenure', ['0–1 yrs','2–3 yrs','4–5 yrs','6–10 yrs','11+ yrs'], [8.7,10.9,8.0,7.8,5.5], [BLUE, RED, BLUE, BLUE, GREEN]);
+bar('wlb', ['1 (worst)','2','3','4 (best)'], [12.9,8.4,7.5,7.7], [RED, BLUE, GREEN, GREEN]);
+</script>
+</body>
+</html>
