@@ -26,4 +26,4 @@
 - **"What business recommendation would you make?"** → push Office Supplies, review Furniture pricing.
 - **"Walk me through a complex query."** → explain #7 (low margin + high sales with HAVING).
 
-*(Versión en español: `README.md`)*
+*(Versión en español: `README-ES.md`)*
