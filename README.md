@@ -1,12 +1,12 @@
 # Data Analyst Portfolio — Alexia Balleza
 
-Actuary (UNAM) turned Data Analyst. Two end-to-end projects using the tools real job postings ask for: **SQL, Python, Power BI, Excel**.
+Actuary (UNAM) turned Data Analyst. Two end-to-end projects using the tools real job postings ask for: **SQL, Python, Power BI, Excel**. Plus three Power BI dashboards from my Microsoft certification coursework.
 
 | Project | Skills | Folder |
 |---|---|---|
 | 1. Employee Attrition Dashboard | Power BI, DAX, People Analytics storytelling | `proyecto-1-rotacion-personal/` |
 | 2. Retail Sales Analysis | SQL (10 business queries), Python (pandas, matplotlib), EDA | `proyecto-2-ventas-retail/` |
-| 3. Power BI Course Dashboards (3) | Forecasting, time series, AI visuals (key influencers, decomposition tree) | `tableros-powerbi-curso/` |
+| 3. Power BI Course Dashboards | Power BI, forecasting, time-series, AI visuals | `tableros-powerbi-curso/` |
 
 ## Project 1 — Employee Attrition Dashboard (Power BI)
 
