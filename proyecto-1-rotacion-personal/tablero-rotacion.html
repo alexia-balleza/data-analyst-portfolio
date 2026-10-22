@@ -4,82 +4,197 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Employee Attrition Dashboard — Alexia Balleza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{ --blue:#0f6cbd; --dark:#1b2a41; --red:#c0392b; --green:#1e8449; --bg:#f4f6f9; --card:#ffffff; }
-  *{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Arial, sans-serif; }
-  body{ background:var(--bg); color:var(--dark); padding:24px; }
-  header{ max-width:1180px; margin:0 auto 20px auto; }
-  header h1{ font-size:26px; font-weight:700; }
-  header p{ color:#5a6b82; margin-top:4px; font-size:14px; }
-  .kpis{ max-width:1180px; margin:0 auto 20px auto; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-  .kpi{ background:var(--card); border-radius:10px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,.08); text-align:center; }
-  .kpi .value{ font-size:30px; font-weight:700; color:var(--blue); }
-  .kpi .value.red{ color:var(--red); }
-  .kpi .label{ font-size:13px; color:#5a6b82; margin-top:4px; }
-  .grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .card{ background:var(--card); border-radius:10px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
-  .card h2{ font-size:16px; margin-bottom:12px; }
-  .card canvas{ width:100% !important; height:260px !important; }
-  .insights{ max-width:1180px; margin:14px auto 0 auto; background:var(--card); border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
-  .insights h2{ font-size:16px; margin-bottom:10px; }
-  .insights li{ margin-left:18px; margin-bottom:6px; font-size:14px; line-height:1.45; }
-  footer{ max-width:1180px; margin:16px auto 0 auto; text-align:center; color:#8595ab; font-size:12px; }
-  @media (max-width:820px){ .kpis{grid-template-columns:repeat(2,1fr);} .grid{grid-template-columns:1fr;} }
+  :root{
+    --bg:#070d1a; --bg2:#0b1526; --card:#0e1a30; --card2:#0a1425;
+    --line:rgba(120,160,220,.14); --txt:#e8eefb; --mut:#8fa3c4; --mut2:#5f7194;
+    --cyan:#22d3ee; --indigo:#6366f1; --violet:#a78bfa; --red:#fb4d6d; --amber:#fbbf24; --green:#34d399;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; font-family:'Inter',system-ui,Arial,sans-serif; }
+  body{ background:radial-gradient(1200px 600px at 15% -5%, rgba(99,102,241,.20), transparent 60%),
+                radial-gradient(1000px 500px at 95% 0%, rgba(34,211,238,.12), transparent 55%),
+                linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
+        color:var(--txt); padding:34px 22px 44px; min-height:100vh; }
+  .wrap{ max-width:1180px; margin:0 auto; }
+
+  /* ---------- Header ---------- */
+  header{ display:flex; justify-content:space-between; align-items:flex-end; gap:18px; flex-wrap:wrap; margin-bottom:22px; }
+  .eyebrow{ font-size:11px; letter-spacing:.28em; font-weight:700; color:var(--cyan); text-transform:uppercase; margin-bottom:8px; }
+  h1{ font-size:34px; font-weight:900; line-height:1.12; letter-spacing:-.01em;
+      background:linear-gradient(92deg,#fff 20%, #a5c8ff 60%, var(--cyan)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub{ color:var(--mut); font-size:14px; margin-top:8px; max-width:640px; line-height:1.5; }
+  .badge{ background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.35); color:#a5f3fc;
+          padding:9px 14px; border-radius:999px; font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .badge b{ color:#fff; }
+
+  /* ---------- KPI cards ---------- */
+  .kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:14px; }
+  .kpi{ position:relative; overflow:hidden; background:linear-gradient(160deg,var(--card),var(--card2));
+        border:1px solid var(--line); border-radius:16px; padding:18px 18px 16px; }
+  .kpi::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px;
+        background:linear-gradient(90deg,var(--indigo),var(--cyan)); }
+  .kpi.red::before{ background:linear-gradient(90deg,#f43f5e,var(--amber)); }
+  .kpi .label{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--mut); font-weight:700; }
+  .kpi .value{ font-size:36px; font-weight:900; margin-top:6px; letter-spacing:-.02em; }
+  .kpi .note{ font-size:12.5px; color:var(--mut); margin-top:4px; line-height:1.45; }
+  .kpi .value.red{ color:var(--red); } .kpi .value.amber{ color:var(--amber); } .kpi .value.cyan{ color:var(--cyan); }
+
+  /* ---------- Chart cards ---------- */
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .grid .wide{ grid-column:span 2; }
+  .card{ background:linear-gradient(165deg,var(--card),var(--card2)); border:1px solid var(--line);
+         border-radius:16px; padding:20px; }
+  .card h2{ font-size:15.5px; font-weight:700; display:flex; align-items:center; gap:9px; }
+  .card h2 .dot{ width:9px; height:9px; border-radius:50%; background:var(--cyan); box-shadow:0 0 10px var(--cyan); flex:none; }
+  .card .cap{ font-size:12.5px; color:var(--mut); margin:6px 0 14px 18px; line-height:1.5; }
+  .chartbox{ position:relative; height:250px; }
+  .chartbox.tall{ height:290px; }
+  .chartbox.donut{ height:250px; }
+
+  .hero{ display:grid; grid-template-columns:5fr 7fr; gap:14px; margin-bottom:14px; }
+  .hero .big{ font-size:52px; font-weight:900; color:var(--red); letter-spacing:-.02em; line-height:1; }
+  .hero .big small{ font-size:20px; color:var(--mut); font-weight:700; }
+
+  /* ---------- Findings ---------- */
+  .findings{ margin-top:14px; }
+  .findings h2{ font-size:17px; font-weight:800; margin-bottom:12px; }
+  .fgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .f{ background:linear-gradient(165deg,var(--card),var(--card2)); border:1px solid var(--line); border-radius:16px; padding:16px 18px; }
+  .f .n{ font-size:22px; font-weight:900; color:var(--cyan); }
+  .f.red .n{ color:var(--red); } .f.amber .n{ color:var(--amber); } .f.green .n{ color:var(--green); } .f.violet .n{ color:var(--violet); }
+  .f p{ font-size:13.5px; color:#c6d3ea; line-height:1.55; margin-top:5px; }
+  .f p b{ color:#fff; }
+
+  footer{ text-align:center; color:var(--mut2); font-size:12.5px; margin-top:22px; line-height:1.6; }
+  footer a{ color:var(--cyan); text-decoration:none; font-weight:600; }
+
+  @media (max-width:920px){ .fgrid{ grid-template-columns:1fr 1fr; } .hero{ grid-template-columns:1fr; } }
+  @media (max-width:820px){ .kpis{ grid-template-columns:repeat(2,1fr); } .grid{ grid-template-columns:1fr; } .grid .wide{ grid-column:span 1; } h1{ font-size:27px; } }
+  @media (max-width:560px){ .fgrid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>Employee Attrition Dashboard</h1>
-  <p>Workforce analytics · 1,470 employees · HR dataset analysis by Alexia Balleza — Data Analyst</p>
-</header>
+<div class="wrap">
 
-<section class="kpis">
-  <div class="kpi"><div class="value">1,470</div><div class="label">Total employees</div></div>
-  <div class="kpi"><div class="value red">8.5%</div><div class="label">Overall attrition rate</div></div>
-  <div class="kpi"><div class="value red">125</div><div class="label">Employees who left</div></div>
-  <div class="kpi"><div class="value">2.4×</div><div class="label">Attrition risk with overtime</div></div>
-</section>
+  <header>
+    <div>
+      <div class="eyebrow">People Analytics · HR Attrition</div>
+      <h1>Employee Attrition Dashboard</h1>
+      <p class="sub">What makes people leave? A full workforce analysis of <b style="color:#fff">1,470 employees</b> — attrition drivers by overtime, department, role, age, tenure and work-life balance.</p>
+    </div>
+    <div class="badge">Analysis by <b>Alexia Balleza</b> · Data Analyst</div>
+  </header>
 
-<section class="grid">
-  <div class="card"><h2>Attrition rate by overtime</h2><canvas id="overtime"></canvas></div>
-  <div class="card"><h2>Attrition rate by department</h2><canvas id="department"></canvas></div>
-  <div class="card"><h2>Attrition rate by job role</h2><canvas id="role"></canvas></div>
-  <div class="card"><h2>Attrition rate by age group</h2><canvas id="age"></canvas></div>
-  <div class="card"><h2>Attrition rate by years at company</h2><canvas id="tenure"></canvas></div>
-  <div class="card"><h2>Attrition rate by work-life balance (1 = worst, 4 = best)</h2><canvas id="wlb"></canvas></div>
-</section>
+  <section class="kpis">
+    <div class="kpi"><div class="label">Total employees</div><div class="value">1,470</div><div class="note">Full HR dataset analyzed</div></div>
+    <div class="kpi red"><div class="label">Employees who left</div><div class="value red">125</div><div class="note">8.5% overall attrition rate</div></div>
+    <div class="kpi red"><div class="label">Overtime attrition risk</div><div class="value amber">2.4×</div><div class="note">14.5% with overtime vs 6.0% without</div></div>
+    <div class="kpi"><div class="label">Avg. monthly income gap</div><div class="value cyan">−$325</div><div class="note">Leavers: $6,225 · Stayers: $6,550</div></div>
+  </section>
 
-<section class="insights">
-  <h2>Key findings</h2>
-  <ul>
-    <li><strong>Overtime is the #1 driver:</strong> employees who work overtime leave at 14.5% vs 6.0% for those who don't — a 2.4× higher rate.</li>
-    <li><strong>Sales Representatives are the highest-risk role</strong> (11.8%), followed by HR Managers (11.3%).</li>
-    <li><strong>Youngest employees leave most:</strong> ages 18–25 show 11.4% attrition, vs 5.0% for ages 46–55.</li>
-    <li><strong>Poor work-life balance triples the risk</strong> at the lowest rating (12.9%).</li>
-    <li><strong>The danger zone is years 2–3</strong> (10.9%); employees with 11+ years are the most loyal (5.5%).</li>
-    <li><strong>Leavers earn less:</strong> $6,225 avg. monthly income vs $6,550 for those who stay.</li>
-  </ul>
-</section>
+  <section class="hero">
+    <div class="card">
+      <h2><span class="dot"></span>Who stayed, who left</h2>
+      <p class="cap">1,345 stayed (91.5%) · 125 left (8.5%)</p>
+      <div class="chartbox donut"><canvas id="donut"></canvas></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>#1 driver — Overtime</h2>
+      <p class="cap">Employees who work overtime leave at more than double the rate of everyone else.</p>
+      <div class="big">14.5% <small>vs 6.0%</small></div>
+      <div class="chartbox" style="height:170px; margin-top:10px;"><canvas id="overtime"></canvas></div>
+    </div>
+  </section>
 
-<footer>Portfolio project — github.com/alexia-balleza/data-analyst-portfolio · Dashboard also built in Power BI (see project guide)</footer>
+  <section class="grid">
+    <div class="card">
+      <h2><span class="dot"></span>Attrition by job role</h2>
+      <p class="cap">Sales Representatives are the highest-risk role in the company.</p>
+      <div class="chartbox tall"><canvas id="role"></canvas></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Attrition by department</h2>
+      <p class="cap">Sales leads overall — consistent with the role-level pattern.</p>
+      <div class="chartbox tall"><canvas id="department"></canvas></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Attrition by age group</h2>
+      <p class="cap">The youngest employees leave most; ages 46–55 are the most stable.</p>
+      <div class="chartbox"><canvas id="age"></canvas></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Attrition by years at company</h2>
+      <p class="cap">The danger zone is years 2–3 — right after onboarding investment peaks.</p>
+      <div class="chartbox"><canvas id="tenure"></canvas></div>
+    </div>
+    <div class="card wide">
+      <h2><span class="dot"></span>Attrition by work-life balance</h2>
+      <p class="cap">Employees rating their work-life balance at the lowest level (1 of 4) leave at 12.9% — the second-strongest signal in the data after overtime.</p>
+      <div class="chartbox" style="height:220px;"><canvas id="wlb"></canvas></div>
+    </div>
+  </section>
+
+  <section class="findings">
+    <h2>Key findings</h2>
+    <div class="fgrid">
+      <div class="f red"><div class="n">2.4×</div><p><b>Overtime is the #1 driver.</b> 14.5% attrition with overtime vs 6.0% without — the single strongest signal in the dataset.</p></div>
+      <div class="f red"><div class="n">11.8%</div><p><b>Sales Representatives</b> are the highest-risk role, followed by HR Managers (11.3%). Sales is also the highest-attrition department (9.3%).</p></div>
+      <div class="f violet"><div class="n">11.4%</div><p><b>Youngest employees leave most</b> (ages 18–25), vs just 5.0% for ages 46–55 — early-career retention is the weak point.</p></div>
+      <div class="f amber"><div class="n">12.9%</div><p><b>Worst work-life balance triples down on risk:</b> employees rating it 1 of 4 leave at 12.9%.</p></div>
+      <div class="f"><div class="n">10.9%</div><p><b>Years 2–3 are the danger zone.</b> After year 10, attrition falls to 5.5% — loyalty compounds with tenure.</p></div>
+      <div class="f green"><div class="n">−$325/mo</div><p><b>Leavers earn less</b> than stayers on average ($6,225 vs $6,550 monthly) — pay sits quietly behind the louder signals.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    Portfolio project · <a href="https://github.com/alexia-balleza/data-analyst-portfolio">github.com/alexia-balleza/data-analyst-portfolio</a><br>
+    Built with SQL + Python (pandas) for analysis and Chart.js for this web dashboard · A Power BI version of this report also exists (see project files)
+  </footer>
+
+</div>
 
 <script>
-const BLUE='#0f6cbd', RED='#c0392b', GRAY='#8fa3bd', GREEN='#1e8449';
-Chart.defaults.font.family="'Segoe UI', Arial, sans-serif";
-function bar(id, labels, data, colors){
+const CYAN='#22d3ee', INDIGO='#818cf8', VIOLET='#a78bfa', RED='#fb4d6d', AMBER='#fbbf24', GREEN='#34d399', GRAY='#64748b';
+Chart.defaults.font.family="'Inter', system-ui, sans-serif";
+Chart.defaults.color='#8fa3c4';
+const grid={ color:'rgba(120,160,220,.08)' };
+const tooltip={ backgroundColor:'#0b1526', borderColor:'rgba(120,160,220,.25)', borderWidth:1, titleColor:'#fff',
+  padding:10, callbacks:{ label:(c)=> ' ' + (c.parsed.y ?? c.parsed.x) + '% attrition' } };
+
+function vbar(id, labels, data, colors){
   new Chart(document.getElementById(id), { type:'bar',
-    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:5 }]},
+    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:7, maxBarThickness:52 }]},
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=> c.parsed.y + '% attrition' } } },
-      scales:{ y:{ beginAtZero:true, ticks:{ callback:(v)=> v + '%' } }, x:{ grid:{ display:false } } } } });
+      plugins:{ legend:{display:false}, tooltip:tooltip },
+      scales:{ y:{ beginAtZero:true, grid:grid, border:{display:false}, ticks:{ callback:(v)=> v + '%' } },
+               x:{ grid:{ display:false }, border:{display:false} } } } });
 }
-bar('overtime', ['No overtime','Overtime'], [6.0,14.5], [BLUE, RED]);
-bar('department', ['Sales','Human Resources','Research & Development'], [9.3,8.6,7.7], [RED, BLUE, GRAY]);
-bar('role', ['Sales Rep.','HR Manager','Research Scientist','Mfg. Director','Lab Technician','Sales Executive','HR Rep.'], [11.8,11.3,8.3,7.5,7.1,7.0,6.2], [RED, RED, BLUE, BLUE, GRAY, GRAY, GRAY]);
-bar('age', ['18–25','26–35','36–45','46–55','56–60'], [11.4,9.8,9.0,5.0,9.8], [RED, BLUE, BLUE, GREEN, BLUE]);
-bar('tenure', ['0–1 yrs','2–3 yrs','4–5 yrs','6–10 yrs','11+ yrs'], [8.7,10.9,8.0,7.8,5.5], [BLUE, RED, BLUE, BLUE, GREEN]);
-bar('wlb', ['1 (worst)','2','3','4 (best)'], [12.9,8.4,7.5,7.7], [RED, BLUE, GREEN, GREEN]);
+function hbar(id, labels, data, colors){
+  new Chart(document.getElementById(id), { type:'bar',
+    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:7, maxBarThickness:26 }]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ ...tooltip, callbacks:{ label:(c)=> ' ' + c.parsed.x + '% attrition' } } },
+      scales:{ x:{ beginAtZero:true, grid:grid, border:{display:false}, ticks:{ callback:(v)=> v + '%' } },
+               y:{ grid:{ display:false }, border:{display:false} } } } });
+}
+
+new Chart(document.getElementById('donut'), { type:'doughnut',
+  data:{ labels:['Stayed','Left'], datasets:[{ data:[1345,125],
+    backgroundColor:[INDIGO, RED], borderColor:'#0e1a30', borderWidth:3, hoverOffset:8 }]},
+  options:{ responsive:true, maintainAspectRatio:false, cutout:'68%',
+    plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, padding:16, color:'#c6d3ea' } },
+      tooltip:{ backgroundColor:'#0b1526', borderColor:'rgba(120,160,220,.25)', borderWidth:1, padding:10,
+        callbacks:{ label:(c)=> ' ' + c.parsed.toLocaleString() + ' employees (' + (c.parsed/1470*100).toFixed(1) + '%)' } } } });
+
+vbar('overtime', ['No overtime','Overtime'], [6.0,14.5], [CYAN, RED]);
+hbar('role', ['Sales Representative','HR Manager','Research Scientist','Manufacturing Director','Lab Technician','Sales Executive','HR Representative'], [11.8,11.3,8.3,7.5,7.1,7.0,6.2], [RED, RED, INDIGO, INDIGO, VIOLET, VIOLET, GRAY]);
+vbar('department', ['Sales','Human Resources','Research & Development'], [9.3,8.6,7.7], [RED, AMBER, CYAN]);
+vbar('age', ['18–25','26–35','36–45','46–55','56–60'], [11.4,9.8,9.0,5.0,9.8], [RED, INDIGO, INDIGO, GREEN, INDIGO]);
+vbar('tenure', ['0–1 yrs','2–3 yrs','4–5 yrs','6–10 yrs','11+ yrs'], [8.7,10.9,8.0,7.8,5.5], [INDIGO, RED, INDIGO, INDIGO, GREEN]);
+vbar('wlb', ['1 — Worst','2','3','4 — Best'], [12.9,8.4,7.5,7.7], [RED, AMBER, GREEN, GREEN]);
 </script>
 </body>
 </html>
