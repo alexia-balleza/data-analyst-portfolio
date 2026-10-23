@@ -71,6 +71,13 @@
   footer{ text-align:center; color:var(--mut2); font-size:12.5px; margin-top:22px; line-height:1.6; }
   footer a{ color:var(--cyan); text-decoration:none; font-weight:600; }
 
+  /* ---------- Motion ---------- */
+  @keyframes rise{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+  .rise{ opacity:0; animation:rise .8s cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 6px var(--cyan); } 50%{ box-shadow:0 0 15px var(--cyan); } }
+  .card h2 .dot{ animation:pulse 2.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+
   @media (max-width:920px){ .fgrid{ grid-template-columns:1fr 1fr; } .hero{ grid-template-columns:1fr; } }
   @media (max-width:820px){ .kpis{ grid-template-columns:repeat(2,1fr); } .grid{ grid-template-columns:1fr; } .grid .wide{ grid-column:span 1; } h1{ font-size:27px; } }
   @media (max-width:560px){ .fgrid{ grid-template-columns:1fr; } }
@@ -89,10 +96,10 @@
   </header>
 
   <section class="kpis">
-    <div class="kpi"><div class="label">Total employees</div><div class="value">1,470</div><div class="note">Full HR dataset analyzed</div></div>
-    <div class="kpi red"><div class="label">Employees who left</div><div class="value red">125</div><div class="note">8.5% overall attrition rate</div></div>
-    <div class="kpi red"><div class="label">Overtime attrition risk</div><div class="value amber">2.4×</div><div class="note">14.5% with overtime vs 6.0% without</div></div>
-    <div class="kpi"><div class="label">Avg. monthly income gap</div><div class="value cyan">−$325</div><div class="note">Leavers: $6,225 · Stayers: $6,550</div></div>
+    <div class="kpi"><div class="label">Total employees</div><div class="value count" data-target="1470" data-format="int">1,470</div><div class="note">Full HR dataset analyzed</div></div>
+    <div class="kpi red"><div class="label">Employees who left</div><div class="value red count" data-target="125" data-format="int">125</div><div class="note">8.5% overall attrition rate</div></div>
+    <div class="kpi red"><div class="label">Overtime attrition risk</div><div class="value amber count" data-target="2.4" data-format="x1">2.4×</div><div class="note">14.5% with overtime vs 6.0% without</div></div>
+    <div class="kpi"><div class="label">Avg. monthly income gap</div><div class="value cyan count" data-target="325" data-format="usd-neg">−$325</div><div class="note">Leavers: $6,225 · Stayers: $6,550</div></div>
   </section>
 
   <section class="hero">
@@ -104,7 +111,7 @@
     <div class="card">
       <h2><span class="dot"></span>#1 driver — Overtime</h2>
       <p class="cap">Employees who work overtime leave at more than double the rate of everyone else.</p>
-      <div class="big">14.5% <small>vs 6.0%</small></div>
+      <div class="big"><span class="count" data-target="14.5" data-format="pct1">14.5%</span> <small>vs 6.0%</small></div>
       <div class="chartbox" style="height:170px; margin-top:10px;"><canvas id="overtime"></canvas></div>
     </div>
   </section>
@@ -160,6 +167,8 @@
 const CYAN='#22d3ee', INDIGO='#818cf8', VIOLET='#a78bfa', RED='#fb4d6d', AMBER='#fbbf24', GREEN='#34d399', GRAY='#64748b';
 Chart.defaults.font.family="'Inter', system-ui, sans-serif";
 Chart.defaults.color='#8fa3c4';
+Chart.defaults.animation.duration=1500;
+Chart.defaults.animation.easing='easeOutQuart';
 const grid={ color:'rgba(120,160,220,.08)' };
 const tooltip={ backgroundColor:'#0b1526', borderColor:'rgba(120,160,220,.25)', borderWidth:1, titleColor:'#fff',
   padding:10, callbacks:{ label:(c)=> ' ' + (c.parsed.y ?? c.parsed.x) + '% attrition' } };
@@ -195,6 +204,51 @@ vbar('department', ['Sales','Human Resources','Research & Development'], [9.3,8.
 vbar('age', ['18–25','26–35','36–45','46–55','56–60'], [11.4,9.8,9.0,5.0,9.8], [RED, INDIGO, INDIGO, GREEN, INDIGO]);
 vbar('tenure', ['0–1 yrs','2–3 yrs','4–5 yrs','6–10 yrs','11+ yrs'], [8.7,10.9,8.0,7.8,5.5], [INDIGO, RED, INDIGO, INDIGO, GREEN]);
 vbar('wlb', ['1 — Worst','2','3','4 — Best'], [12.9,8.4,7.5,7.7], [RED, AMBER, GREEN, GREEN]);
+
+/* ---------- Motion: entrance, count-up, chart replay on scroll ---------- */
+document.querySelectorAll('header, .kpi, .hero .card, .grid .card, .findings .f, footer').forEach((el, i) => {
+  el.classList.add('rise');
+  el.style.animationDelay = Math.min(i * 70, 700) + 'ms';
+});
+
+function fmtCount(v, f){
+  if(f === 'int')     return Math.round(v).toLocaleString('en-US');
+  if(f === 'x1')      return v.toFixed(1) + '×';
+  if(f === 'usd-neg') return '−$' + Math.round(v);
+  if(f === 'pct1')    return v.toFixed(1) + '%';
+  return Math.round(v);
+}
+document.querySelectorAll('.count').forEach(el => {
+  const target = parseFloat(el.dataset.target), format = el.dataset.format, dur = 1600;
+  let t0 = null;
+  function step(ts){
+    if(!t0) t0 = ts;
+    const p = Math.min((ts - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmtCount(target * e, format);
+    if(p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+});
+
+const _charts = [];
+['donut','overtime','role','department','age','tenure','wlb'].forEach(id => {
+  const cv = document.getElementById(id);
+  const ch = cv && Chart.getChart(cv);
+  if(ch) _charts.push(ch);
+});
+function _inView(el){ const r = el.getBoundingClientRect(); return r.top < window.innerHeight && r.bottom > 0; }
+if('IntersectionObserver' in window){
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if(en.isIntersecting){
+        const ch = _charts.find(c => c.canvas === en.target);
+        if(ch){ ch.reset(); ch.update(); }
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.35 });
+  _charts.forEach(ch => { if(!_inView(ch.canvas)) io.observe(ch.canvas); });
+}
 </script>
 </body>
 </html>
